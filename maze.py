@@ -5,321 +5,315 @@ import sys
 import webbrowser
 import os
 
-def affichage_text(texte, end="\n"): 
-    """fonction faite par Clavin l'an dernier pour le projet pokémon (il reste encore des souvenirs de lui)"""
-    for i in range(len(texte)):
-        print(texte[i], end="")
+def display_text(text, end="\n"): 
+    """Function for displaying text in a customized manner"""
+    for i in range(len(text)):
+        print(text[i], end="")
         sys.stdout.flush()
         time.sleep(0.012)
     print(end, end="")
 
-class Laby:
-    def __init__(self, nbli, nbcol):
+class Maze:
+    def __init__(self, num_rows, num_cols):
         """
-        Utilitée : 
-            Initialisation du labyrinthe (présentée sous la forme d'un tableau 3D avec les deux premières dimenssions pour
-            le plan et la troisème pour savoir pour chaque case si il existe des murs autour ou non)
-        Entrée : 
-            Self et le nombre de ligne et de colones souhaitées
-        Renvoie : 
-            Ne renvoi rien
+        Use: 
+            Initialization of the maze (presented in the form of a 3D table with the first two dimensions for the plane and the third to determine whether or not there are walls around each square)
+        Input: 
+            Self and the desired number of rows and columns
+        Returns: 
+            Returns nothing
         """
-        self.l, self.c = nbli, nbcol
-        self.tab=[[[1]*4 for i in range(self.c)] for j in range(self.l)]
-        self.visite=[[False for i in range (self.c)] for j in range (self.l)]
+        self.r, self.c = num_rows, num_cols
+        self.grid = [[[1]*4 for i in range(self.c)] for j in range(self.r)]
+        self.visited = [[False for i in range(self.c)] for j in range(self.r)]
 
-    def appartient(self, i, j):
+    def is_inside(self, i, j):
         """
-        Utilitée : 
-            Permet de savoir si une case appartient ou non au le labyrinthe
-        Entrée : 
-            Self et la ligne "i" et la colone "j"
-        Renvoie : 
-            Renvoi True si la case appartient au labyrinthe et False sinon
+        Use: 
+            Allows you to know whether or not a square belongs to the maze.
+        Input: 
+            Self and the row “i” and column “j.”
+        Returns: 
+            Returns True if the square belongs to the maze and False otherwise.
         """
-        return 0 <= i < self.c and 0 <= j < self.l
+        return 0 <= i < self.c and 0 <= j < self.r
 
-    def verifmur (self, case, direction):
+    def check_wall(self, cell, direction):
         """
-        Utilitée : 
-            Permet de vérifier s'il y a un mur dans la direction donnée (Nord, Est, Sud et Ouest)
-        Entrée : 
-            Self et une case avec des coordonnée (car tableau 2D) et une direction (0 pour le Nord, 1 pour l'Est, 2 pour le Sud et 3 pour l'Ouest)
-        Renvoie : 
-            Renvoi False s'il n'y a pas de mur dans la direction donnée et False sinon
+        Use: 
+            Checks whether there is a wall in the given direction (North, East, South, and West)
+        Input: 
+            Self and a box with coordinates (as a 2D array) and a direction (0 for North, 1 for East, 2 for South, and 3 for West)
+        Returns: 
+            Returns False if there is no wall in the given direction and True otherwise
         """
-        if self.tab[case][direction] == 0:
+        if self.grid[cell[0]][cell[1]][direction] == 0:
             return False
         return True
     
-    def inversedirection (self, nb):
+    def reverse_direction(self, nb):
         """
-        Utilitée : 
-            Permet d'inversé la direction
-        Entrée : 
-            Self et une direction (0 pour le Nord, 1 pour l'Est, 2 pour le Sud et 3 pour l'Ouest)
-        Renvoie : 
-            Renvoi le numéro correspondant à la direction opposé de celle donnée
+        Use: 
+            Reverses the direction
+        Input: 
+            Self and a direction (0 for North, 1 for East, 2 for South, and 3 for West)
+        Returns: 
+            Returns the number corresponding to the opposite direction of the one given
         """
-        if nb==0:
-            return 2
-        if nb==1: 
-            return 3
-        if nb==2: 
-            return 0
-        if nb==3:
-            return 1
+        if nb == 0: return 2
+        if nb == 1: return 3
+        if nb == 2: return 0
+        if nb == 3: return 1
     
-    def retrait_mur (self, case, direction):
+    def remove_wall(self, cell, direction):
         """
-        Utilitée : 
-            Permet le retrait d'un mur et le l'actualiser dans la case d'à côté
-        Entrée : 
-            Self et une case avec des coordonées (car tableau 2D) et une direction (0 pour le Nord, 1 pour l'Est, 2 pour le Sud et 3 pour l'Ouest)
-        Renvoie : 
-            Ne renvoie rien
+        Use: 
+            Allows you to remove a wall and update it in the adjacent square.
+        Input: 
+            Self and a square with coordinates (as it is a 2D array) and a direction (0 for North, 1 for East, 2 for South, and 3 for West).
+        Returns: 
+            Returns nothing.
         """
-        i,j=case
-        if 0 <= i <= self.c-1 and 0<= j <= self.l-1:
-            if direction == 0 and i>0:
-                indice=self.inversedirection(direction)
-                self.tab[i-1][j][indice]=0
-            elif direction == 1 and j<self.c-1:
-                indice=self.inversedirection(direction)
-                self.tab[i][j+1][indice]=0
-            elif direction == 2 and i<self.l-1:
-                indice=self.inversedirection(direction)
-                self.tab[i+1][j][indice]=0
-            elif direction == 3 and j>0:
-                indice=self.inversedirection(direction)
-                self.tab[i][j-1][indice]=0
-            self.tab[i][j][direction]=0
+        i, j = cell
+        if 0 <= i <= self.c - 1 and 0 <= j <= self.r - 1:
+            if direction == 0 and i > 0:
+                index = self.reverse_direction(direction)
+                self.grid[i-1][j][index] = 0
+            elif direction == 1 and j < self.c - 1:
+                index = self.reverse_direction(direction)
+                self.grid[i][j+1][index] = 0
+            elif direction == 2 and i < self.r - 1:
+                index = self.reverse_direction(direction)
+                self.grid[i+1][j][index] = 0
+            elif direction == 3 and j > 0:
+                index = self.reverse_direction(direction)
+                self.grid[i][j-1][index] = 0
+            self.grid[i][j][direction] = 0
 
     def __str__(self):
         """
-        Utilitée : 
-            Permet l'affichage en mode console
-        Entrée : 
+         Use: 
+            Allows display in console mode.
+        Input: 
             Self
-        Renvoie : 
-            Renvoi "s", c'est à dire le labyrinthe
+        Returns: 
+            Returns “s”, i.e., the maze.
         """
-        s=""
-        for j in range (self.c):
+        s = ""
+        for j in range(self.c):
             s += "+"
-            if (self.tab[0][j][0])==1:
-                 s+="-"
-            if (self.tab[0][j][0])==0:
-                s+=" "
+            if self.grid[0][j][0] == 1:
+                 s += "-"
+            if self.grid[0][j][0] == 0:
+                s += " "
         s += "+\n"
-        for i in range (self.l):
-            for j in range (self.c):
-                if (self.tab[i][j][3])==1:
-                    s+="| "
-                if (self.tab[i][j][3])==0:
-                    s+="  "
-            s+="|\n" if self.tab[i][self.c - 1][1] == 1 else " \n"
-            for j in range (self.c):
-                if (self.tab[i][j][2])==1:
-                    s+="+-"
-                if (self.tab[i][j][2])==0:
-                    s+="+ "
-            s+="+\n"
+        for i in range(self.r):
+            for j in range(self.c):
+                if self.grid[i][j][3] == 1:
+                    s += "| "
+                if self.grid[i][j][3] == 0:
+                    s += "  "
+            s += "|\n" if self.grid[i][self.c - 1][1] == 1 else " \n"
+            for j in range(self.c):
+                if self.grid[i][j][2] == 1:
+                    s += "+-"
+                if self.grid[i][j][2] == 0:
+                    s += "+ "
+            s += "+\n"
         return s
 
-def enregistrement_image (laby, images):
+def save_image(maze, images):
     """
-    Utilitée : 
-        Permet de mettre toute les étapes du labyrinthe en mode image dans une list
-    Entrée : 
-        Le labyrinthe, un compteur pour mettre un bon numéro aux images et pour pas qu'elles aient le memes nom (pour mettre dans le bon ordre dans le gif)
-    Renvoie : 
-        renvoi rien
+    Use: 
+        Allows you to put all the steps of the maze in image mode in a list
+    Input: 
+        The maze, a list to append the images to
+    Returns: 
+        Returns nothing
     """
-    taille_case = 40
-    epaisseur_mur = 4
-    c_image = laby.c * taille_case + epaisseur_mur #longueur du laby fait tallie de la case fois le nombre de case dans un ligne
-    l_image = laby.l * taille_case + epaisseur_mur #largeur du laby fait tallie de la case fois le nombre de case dans une colone
-    couleur_mur=(75, 0, 130) #par ce qu'Achille aime le violet 
-    img = Image.new("RGB", (c_image, l_image), "grey") #par ce que Lucas aime le gris
+    cell_size = 40
+    wall_thickness = 4
+    img_width = maze.c * cell_size + wall_thickness # length of the maze is the cell size times the number of cells in a row
+    img_height = maze.r * cell_size + wall_thickness # width of the maze is the cell size times the number of cells in a column
+    wall_color = (75, 0, 130) # because Achille likes purple 
+    img = Image.new("RGB", (img_width, img_height), "grey") # because Lucas likes grey
     draw = ImageDraw.Draw(img)
-    for i in range (laby.l):
-        for j in range(laby.c):
-            x1 = j * taille_case #pour départ ordonné
-            y1 = i * taille_case #pour départ abscisse
-            x2 = x1 + taille_case #pour arrivée ordonné
-            y2 = y1 + taille_case #pour arrivée abscisse
-            if laby.tab[i][j][0] == 1: #mur du haut
-                draw.line([(x1, y1), (x2, y1)], fill=couleur_mur, width=epaisseur_mur)
-            if laby.tab[i][j][1] == 1: #mur de droite
-                draw.line([(x2, y1), (x2, y2)], fill=couleur_mur, width=epaisseur_mur)
-            if laby.tab[i][j][2] == 1: #mur du bas
-                draw.line([(x1, y2), (x2, y2)], fill=couleur_mur, width=epaisseur_mur)
-            if laby.tab[i][j][3] == 1: #mur de gauche
-                draw.line([(x1, y1), (x1, y2)], fill=couleur_mur, width=epaisseur_mur)
+    
+    for i in range(maze.r):
+        for j in range(maze.c):
+            x1 = j * cell_size # for starting x
+            y1 = i * cell_size # for starting y
+            x2 = x1 + cell_size # for ending x
+            y2 = y1 + cell_size # for ending y
             
+            if maze.grid[i][j][0] == 1: # top wall
+                draw.line([(x1, y1), (x2, y1)], fill=wall_color, width=wall_thickness)
+            if maze.grid[i][j][1] == 1: # right wall
+                draw.line([(x2, y1), (x2, y2)], fill=wall_color, width=wall_thickness)
+            if maze.grid[i][j][2] == 1: # bottom wall
+                draw.line([(x1, y2), (x2, y2)], fill=wall_color, width=wall_thickness)
+            if maze.grid[i][j][3] == 1: # left wall
+                draw.line([(x1, y1), (x1, y2)], fill=wall_color, width=wall_thickness)
             
-    images.append(img) #mettre l'image dans la liste images
+    images.append(img) # put the image in the images list
 
-def gif (images, nom):
+def create_gif(images, name):
     """
-    Utilitée : 
-        Permet de créer un gif
-    Entrée : 
-        Les images, un nom
-    Renvoie : 
-        renvoi rien, créer un gif
+    Use: 
+        Allows you to create a GIF
+    Input: 
+        Images, a name
+    Returns: 
+        Returns nothing, creates a GIF
     """
-    images[0].save(nom, save_all=True, append_images=images[1:], duration=100, loop=1)
+    images[0].save(name, save_all=True, append_images=images[1:], duration=100, loop=1)
 
-def ouvrir_gif_navigateur(GIF):
+def open_gif_browser(gif_path):
     """
-    Utilité : 
-        Permet d'ouvrir un fichier GIF dans le navigateur par défaut du système.
-    Entrée : 
-        Le chemin du fichier GIF.
-    Renvoie : 
-        Rien. Ouvre le fichier GIF dans le navigateur par défaut.
-        #### Fait avec chat gtp car on voulait absolument cette option
+    Use: 
+        Opens a GIF file in the system's default browser.
+    Input: 
+        The path to the GIF file.
+    Returns: 
+        Nothing. Opens the GIF file in the default browser.
     """
-    chemin_gif = os.path.abspath(GIF)  # Obtenir le chemin absolu du fichier GIF
-    url = f"file://{chemin_gif}"  # Créer l'URL locale pour le fichier GIF
-    webbrowser.open(url)  # Ouvre l'URL dans le navigateur par défaut
+    abs_path = os.path.abspath(gif_path)  # Get the absolute path of the GIF file
+    url = f"file://{abs_path}"  # Create the local URL for the GIF file
+    webbrowser.open(url)  # Opens the URL in the default browser
 
-
-
-def generation_rec(laby, i, j, deja_vus, images):
+def generate_rec(maze, i, j, visited_cells, images):
     """
-    Utilitée : 
-        permet au labyrinte de se génrer seul de manière récursive
-    Entrée : 
-        laby, (une case avec des coordonées i et j), et un ensemble contennt toute els case déjà vu
-    Renvoie : 
-        revoi rien
+    Use: 
+        allows the maze to generate itself recursively
+    Input: 
+        maze, (a square with coordinates i and j), and a set containing all squares already seen
+    Returns: 
+        returns nothing
     """
-    if (i, j) in deja_vus:
+    if (i, j) in visited_cells:
         return
-    else :
-        deja_vus.append((i, j))
-        direction=[]
-        if laby.appartient(i-1,j):
-            direction.append((-1, 0, 0)) #nord
-        if laby.appartient(i,j+1):
-            direction.append((0, 1, 1)) #est
-        if laby.appartient(i+1, j):
-            direction.append((1, 0, 2)) #sud
-        if laby.appartient(i, j-1):
-            direction.append((0, -1, 3)) #ouest
-        random.shuffle(direction)
-        for dir in direction:
-            ligne, colone, d = dir
-            n_ligne, n_colone = ligne + i, colone + j
-            if (n_ligne, n_colone) not in deja_vus:
-                laby.retrait_mur((i,j), d)
-                enregistrement_image(laby, images)
-                generation_rec(laby, n_ligne, n_colone, deja_vus, images)
-
-
-def generation(nb_l, nb_c, avec_gif):
-    """
-    Utilité : 
-        Permet de gérer l'appel récursif du labyrinthe.
-    Entrée : 
-        Le nombre de lignes et de colonnes souhaitées pour le labyrinthe et avec_gif (0 si pas de GIF, 1 si oui).
-    Renvoie : 
-        Le labyrinthe généré.
-    """
-    laby = Laby(nb_l, nb_c)
-    deja_vus = []
-    images = []
-    generation_rec(laby, 0, 0, deja_vus, images)
-    if avec_gif == 1:
-        """partie faite avec chat gpt""" 
-        gif(images, "laby.gif")  # Crée le GIF
-        # Vérifie que le fichier GIF existe avant d'essayer de l'ouvrir
-        if os.path.exists("laby.gif"):
-            ouvrir_gif_navigateur("laby.gif")  # Ouvre le GIF dans le navigateur par défaut
-        else:
-            print("Erreur : Le fichier GIF n'a pas pu être créé.")
-    else :
-        return laby
-
-
-
-def choix_principal ():
-    """"fonction pour l'utilisateur, rien de bien complqué, juste long"""
-    affichage_text("Saisissez 1 si vous voulez créer un labyrinthe et l'afficher en interface console.")
-    affichage_text("Saisissez 2 si vous voulez créer un labyrinthe et l'afficher en gif.")
-    affichage_text("Saisissez 3 si vous voulez quitter.")
-    choix = int(input("Votre choix ici : "))
-
-
-    if choix==1:
-        affichage_text("Vous avez choisi de créer un labyrinthe en interface console.")
-        affichage_text("Votre labyrinthe est en cours de génération")
-        laby = generation(l, h, 0)
-        print(laby)
-        recommecer()
-        
-
-    elif choix==2:
-        affichage_text("Vous avez choisi de créer un labyrinthe et l'afficher via un gif.")
-        l=demande_largeur()
-        h=demande_hauteur()
-        affichage_text("Votre labyrinthe est en cours de génération et s'ouvrira une fois terminé")
-        laby = generation(l, h, 1)
-        recommecer()
-
-    elif choix==3:
-        quitter()
     else:
-        affichage_text("Veuillez saisir un choix valide")
-        choix_principal()
+        visited_cells.append((i, j))
+        directions = []
+        if maze.is_inside(i-1, j):
+            directions.append((-1, 0, 0)) # north
+        if maze.is_inside(i, j+1):
+            directions.append((0, 1, 1)) # east
+        if maze.is_inside(i+1, j):
+            directions.append((1, 0, 2)) # south
+        if maze.is_inside(i, j-1):
+            directions.append((0, -1, 3)) # west
+        random.shuffle(directions)
+        
+        for d_info in directions:
+            row_offset, col_offset, d = d_info
+            n_row, n_col = row_offset + i, col_offset + j
+            if (n_row, n_col) not in visited_cells:
+                maze.remove_wall((i, j), d)
+                save_image(maze, images)
+                generate_rec(maze, n_row, n_col, visited_cells, images)
 
+def generate(num_r, num_c, with_gif):
+    """
+    Use: 
+        Manages the recursive call of the maze.
+    Input: 
+        The number of rows and columns desired for the maze and with_gif (0 if no GIF, 1 if yes).
+    Returns: 
+        The generated maze.
+    """
+    maze = Maze(num_r, num_c)
+    visited_cells = []
+    images = []
+    generate_rec(maze, 0, 0, visited_cells, images)
+    
+    if with_gif == 1:
+        """part done with chat gpt""" 
+        create_gif(images, "maze.gif")  # Creates the GIF
+        # Checks that the GIF file exists before trying to open it
+        if os.path.exists("maze.gif"):
+            open_gif_browser("maze.gif")  # Opens the GIF in the default browser
+        else:
+            print("Error: The GIF file could not be created.")
+    else:
+        return maze
 
-def quitter():
-    affichage_text("Voulez vous vraiment quitter ?")
-    affichage_text("saisissez 'Y' si vous souhaitez quitter")
-    affichage_text("saisissez 'N' si vous souhaitez rester")
-    continuite=(input("Y / N : "))
-    if continuite == "Y":
-        affichage_text("Vous n'auriez jamais du faire ça ...")
+def main_choice():
+    """function for the user, nothing too complicated, just lots of IF statements"""
+    display_text("Enter 1 if you want to create a maze and display it in the console interface.")
+    display_text("Enter 2 if you want to create a maze and display it as a GIF.")
+    display_text("Enter 3 if you want to quit.")
+    choice = int(input("Your choice here: "))
+
+    if choice == 1:
+        display_text("You have chosen to create a maze in the console interface.")
+        w = ask_width()
+        h = ask_height()
+        display_text("Your maze is being generated")
+        maze = generate(h, w, 0)
+        print(maze)
+        restart()
+        
+    elif choice == 2:
+        display_text("You have chosen to create a maze and display it using a GIF.")
+        w = ask_width()
+        h = ask_height()
+        display_text("Your maze is being generated and will open once it is complete.")
+        maze = generate(h, w, 1)
+        restart()
+
+    elif choice == 3:
+        quit_program()
+    else:
+        display_text("Please enter a valid selection")
+        main_choice()
+
+def quit_program():
+    display_text("Are you sure you want to leave??")
+    display_text("enter 'Y' if you wish to exit")
+    display_text("enter 'N' if you wish to stay")
+    continue_choice = input("Y / N : ")
+    
+    if continue_choice.upper() == "Y":
+        display_text("You should never have done that...")
         time.sleep(1)
         url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         webbrowser.open(url)
-    elif continuite == "N":
-        choix_principal()
+    elif continue_choice.upper() == "N":
+        main_choice()
     else: 
-        affichage_text("Merci de choisir un choix valide")
-        quitter()
+        display_text("Please select a valid option.")
+        quit_program()
 
-def recommecer ():
-    affichage_text("souhaitez-vous recommencer ?")
-    affichage_text("saisissez 'Y' si vous souhaitez rester")
-    affichage_text("saisissez 'N' si vous souhaitez quitter")
-    continuite=(input("Y / N : "))
-    if continuite == "Y":
-        choix_principal()
-    elif continuite == "N":
-        quitter()
+def restart():
+    display_text("Would you like to start over?")
+    display_text("enter 'Y' if you wish to stay")
+    display_text("enter 'N' if you wish to quit")
+    continue_choice = input("Y / N : ")
+    
+    if continue_choice.upper() == "Y":
+        main_choice()
+    elif continue_choice.upper() == "N":
+        quit_program()
     else: 
-        affichage_text("Merci de choisir un choix valide")
-        recommecer()
+        display_text("Please choose a valid option")
+        restart()
 
-def demande_largeur():
-    affichage_text("Merci d'indiquer la largeur de votre labyrinthe")
-    l=int(input("Largeur de votre labyrinthe : "))
-    if l <= 0:
-        affichage_text("Merci de rentrer une largeur valide")
-        demande_largeur()
-    return l
+def ask_width():
+    display_text("Please indicate the width of your maze")
+    w = int(input("Width of your maze: "))
+    if w <= 0:
+        display_text("Please enter a valid width")
+        return ask_width()
+    return w
 
-def demande_hauteur():
-    affichage_text("Merci d'indiquer la hauteur de votre labyrinthe")
-    h=int(input("Hauteur de votre labyrinthe : "))
+def ask_height():
+    display_text("Please indicate the height of your maze")
+    h = int(input("Height of your maze: "))
     if h <= 0:
-        affichage_text("Merci de rentrer une hauteur valide")
-        demande_hauteur()
+        display_text("Please enter a valid height")
+        return ask_height()
     return h
-affichage_text("Bienvenue !")
-choix_principal()
+
+display_text("Welcome!")
+main_choice()
